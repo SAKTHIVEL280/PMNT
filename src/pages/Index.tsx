@@ -96,7 +96,7 @@ const Index = () => {
             {/* Centered content */}
             <motion.div
               style={{ y: heroY, opacity: heroOpacity }}
-              className="relative z-10 flex flex-col items-center justify-center text-center px-8 py-24 md:py-36"
+              className="relative z-10 flex flex-col items-center justify-center text-center px-8 h-full"
             >
               <motion.h1
                 initial={{ opacity: 0, y: 30 }}
