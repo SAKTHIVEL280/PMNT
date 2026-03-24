@@ -117,7 +117,7 @@ Start writing your markdown here. Use the toolbar above or keyboard shortcuts:
 3. Export as .md file
 4. Zen mode for distraction-free writing
 
-> "The scariest moment is always just before you start." — Stephen King
+> "The scariest moment is always just before you start." - Stephen King
 
 Happy writing! ✍️
 `;
@@ -126,7 +126,7 @@ const TEMPLATES: { name: string; icon: typeof FileText; content: string }[] = [
   {
     name: "Meeting Notes",
     icon: Briefcase,
-    content: `# Meeting Notes — {{date}}
+    content: `# Meeting Notes - {{date}}
 
 ## Attendees
 - 
@@ -148,7 +148,7 @@ const TEMPLATES: { name: string; icon: typeof FileText; content: string }[] = [
   {
     name: "Journal Entry",
     icon: BookOpen,
-    content: `# Journal — {{date}}
+    content: `# Journal - {{date}}
 
 ## How I'm feeling
 
@@ -195,7 +195,7 @@ const TEMPLATES: { name: string; icon: typeof FileText; content: string }[] = [
   {
     name: "To-Do List",
     icon: ListTodo,
-    content: `# To-Do — {{date}}
+    content: `# To-Do - {{date}}
 
 ## High Priority
 - [ ] 
@@ -1202,7 +1202,7 @@ const Editor = () => {
                 <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setMobileView("editor")}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-medium">{activeNote.title} — Preview</span>
+                <span className="text-sm font-medium">{activeNote.title} - Preview</span>
               </div>
               <div className="flex-1 overflow-y-auto p-5 markdown-preview">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{activeNote.content}</ReactMarkdown>

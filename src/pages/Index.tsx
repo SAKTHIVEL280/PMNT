@@ -31,7 +31,7 @@ const featureCards = [
   {
     icon: Split,
     title: "Live split preview",
-    description: "Write markdown on the left, see it rendered beautifully on the right — in real time.",
+    description: "Write markdown on the left, see it rendered beautifully on the right in real time.",
     accent: "from-accent/10 to-accent/5",
     border: "border-accent/20",
   },
@@ -60,7 +60,7 @@ const allFeatures = [
   { icon: FileText, title: "Templates", desc: "Meeting notes, journal, project plans." },
   { icon: Download, title: "Export anywhere", desc: "Download as .md, .html, or print to PDF." },
   { icon: Zap, title: "Zen mode", desc: "Distraction-free fullscreen writing." },
-  { icon: Pen, title: "Rich formatting", desc: "Tables, code blocks, task lists — full GFM." },
+  { icon: Pen, title: "Rich formatting", desc: "Tables, code blocks, task lists, and full GFM support." },
 ];
 
 const Index = () => {
@@ -166,7 +166,7 @@ const Index = () => {
             </div>
             <motion.p variants={fadeUp} custom={1} className="text-muted-foreground text-base md:text-lg leading-relaxed md:pt-2">
               PMNT is a privacy-first markdown editor that helps you write, organize, and export
-              your notes — all from your browser with zero setup, no accounts, and no tracking.
+              your notes, all from your browser with zero setup, no accounts, and no tracking.
             </motion.p>
           </motion.div>
         </div>
@@ -346,7 +346,7 @@ const Index = () => {
                 100% free. Forever.
               </motion.h2>
               <motion.p variants={fadeUp} custom={2} className="text-muted-foreground text-sm md:text-base max-w-lg mx-auto mb-8 leading-relaxed">
-                No accounts, no subscriptions, no tracking. Your notes stay on your device — private by default.
+                No accounts, no subscriptions, no tracking. Your notes stay on your device, private by default.
               </motion.p>
               <motion.div variants={fadeUp} custom={3} className="flex flex-wrap justify-center gap-x-6 gap-y-3 text-[13px] text-foreground/70">
                 {["Unlimited notes", "All features included", "No account required", "Privacy-first", "Works offline"].map((item) => (

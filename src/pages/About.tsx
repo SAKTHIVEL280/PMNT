@@ -13,21 +13,21 @@ const fadeUp = {
 };
 
 const values = [
-  { icon: Target, title: "Focus", description: "Built to help you concentrate on what matters — your writing, nothing else." },
+  { icon: Target, title: "Focus", description: "Built to help you concentrate on what matters: your writing, nothing else." },
   { icon: Sparkles, title: "Craft", description: "Every pixel, every interaction is considered. Good tools should feel invisible." },
   { icon: Heart, title: "Simplicity", description: "Powerful doesn't mean complicated. The best features are the ones you barely notice." },
-  { icon: Code2, title: "Open Source", description: "PMNT is free and open-source. Inspect, fork, contribute — it's yours." },
+  { icon: Code2, title: "Open Source", description: "PMNT is free and open-source. Inspect, fork, contribute. It's yours." },
 ];
 
 const timeline = [
-  { year: "The Problem", event: "Searched for a better note-taking app — something clean, easy to access, and markdown-first. Couldn't find one that felt right." },
+  { year: "The Problem", event: "Searched for a better note-taking app, something clean, easy to access, and markdown-first. Couldn't find one that felt right." },
   { year: "The Idea", event: "Decided to stop searching and start building. If the perfect tool doesn't exist, why not create it?" },
-  { year: "The Build", event: "Built PMNT from scratch with Lovable — an AI-powered development platform that turned the vision into reality." },
+  { year: "The Build", event: "Built PMNT from scratch with Lovable, an AI-powered development platform that turned the vision into reality." },
   { year: "The Result", event: "A free, privacy-first markdown editor that works entirely in your browser. No accounts, no cloud, no compromises." },
 ];
 
 const About = () => {
-  usePageSEO({ title: "About", description: "PMNT was built by Sakthivel with Lovable — a solo dev's quest for the perfect markdown note-taking app.", path: "/about" });
+  usePageSEO({ title: "About", description: "PMNT was built by Sakthivel with Lovable. A solo dev's quest for the perfect markdown note-taking app.", path: "/about" });
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -55,7 +55,7 @@ const About = () => {
             transition={{ delay: 0.2, duration: 0.7 }}
             className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed"
           >
-            I'm Sakthivel. I wanted a markdown note-taking app that was clean, fast, and easy to access — but couldn't find one. So I built my own, with the help of Lovable.
+            I'm Sakthivel. I wanted a markdown note-taking app that was clean, fast, and easy to access, but couldn't find one. So I built my own, with the help of Lovable.
           </motion.p>
         </div>
       </section>
@@ -125,10 +125,10 @@ const About = () => {
               <p className="text-sm text-muted-foreground mb-4">Solo Developer & Creator</p>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
                 I was frustrated with bloated note-taking apps that did everything except let me write in peace. 
-                So I built PMNT — a clean, privacy-first markdown editor — entirely with the help of{" "}
+                So I built PMNT, a clean, privacy-first markdown editor, entirely with the help of{" "}
                 <a href="https://lovable.dev" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
                   Lovable
-                </a>, an AI-powered development platform. No team, no funding — just an idea and the right tool to bring it to life.
+                </a>, an AI-powered development platform. No team, no funding. Just an idea and the right tool to bring it to life.
               </p>
               <div className="flex flex-wrap gap-3 mt-5 justify-center md:justify-start">
                 <a
