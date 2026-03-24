@@ -269,53 +269,7 @@ const Index = () => {
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-[0_30px_80px_-20px] shadow-foreground/[0.08]">
-              {/* Window chrome */}
-              <div className="flex items-center gap-2 px-5 py-3 border-b border-border/50 bg-muted/30">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-destructive/40" />
-                  <div className="w-3 h-3 rounded-full bg-accent/40" />
-                  <div className="w-3 h-3 rounded-full bg-primary/20" />
-                </div>
-                <div className="flex-1 flex justify-center">
-                  <span className="text-[11px] text-muted-foreground font-mono px-3 py-0.5 rounded-md bg-foreground/[0.04]">meeting-notes.md</span>
-                </div>
-                <div className="w-[54px]" />
-              </div>
-              {/* Split panes */}
-              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border/50">
-                <div className="p-6 md:p-7 font-mono text-[12px] md:text-[13px] text-muted-foreground leading-[1.9]">
-                  <p className="text-foreground/80"># Meeting Notes</p>
-                  <p className="mt-3">## Key Decisions</p>
-                  <p className="mt-2">- Launch date set for **March 15th**</p>
-                  <p>- Budget approved for Q2 campaign</p>
-                  <p>- New hire starts *next Monday*</p>
-                  <p className="mt-3">## Action Items</p>
-                  <p className="mt-2">1. Finalize design mockups</p>
-                  <p>2. Review analytics dashboard</p>
-                  <p>3. Schedule team retrospective</p>
-                  <p className="mt-3">{"> Great meeting, team! 🎉"}</p>
-                </div>
-                <div className="p-6 md:p-7 text-[12px] md:text-[13px] leading-[1.9]">
-                  <h1 className="font-serif text-xl md:text-2xl font-bold mb-4 text-foreground">Meeting Notes</h1>
-                  <h2 className="font-serif text-sm md:text-base font-bold mb-2 text-foreground/90">Key Decisions</h2>
-                  <ul className="list-disc pl-5 mb-4 space-y-1 text-foreground/80">
-                    <li>Launch date set for <strong className="text-foreground">March 15th</strong></li>
-                    <li>Budget approved for Q2 campaign</li>
-                    <li>New hire starts <em>next Monday</em></li>
-                  </ul>
-                  <h2 className="font-serif text-sm md:text-base font-bold mb-2 text-foreground/90">Action Items</h2>
-                  <ol className="list-decimal pl-5 mb-4 space-y-1 text-foreground/80">
-                    <li>Finalize design mockups</li>
-                    <li>Review analytics dashboard</li>
-                    <li>Schedule team retrospective</li>
-                  </ol>
-                  <blockquote className="border-l-[3px] border-accent pl-4 italic text-muted-foreground">
-                    Great meeting, team! 🎉
-                  </blockquote>
-                </div>
-              </div>
-            </div>
+            <AnimatedEditorPreview />
           </motion.div>
         </div>
       </section>
