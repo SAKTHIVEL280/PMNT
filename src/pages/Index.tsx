@@ -186,7 +186,7 @@ const Index = () => {
                 key={card.title}
                 variants={fadeUp}
                 custom={i}
-                className={`relative p-7 md:p-8 rounded-2xl border ${card.border} bg-gradient-to-br ${card.accent} overflow-hidden group hover:shadow-lg transition-all duration-500`}
+                className={`relative p-7 md:p-8 rounded-2xl border ${card.border} bg-gradient-to-br ${card.accent} overflow-hidden group hover:shadow-lg hover:scale-[1.02] hover:-translate-y-1 transition-all duration-500`}
               >
                 <div className="mb-16 md:mb-24">
                   <h3 className="font-serif text-xl md:text-2xl font-semibold mb-2 tracking-[-0.01em]">{card.title}</h3>
