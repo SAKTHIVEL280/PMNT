@@ -91,7 +91,7 @@ const Index = () => {
       </div>
 
       {/* Hero */}
-      <section className="relative pt-36 pb-20 md:pt-52 md:pb-32 px-6">
+      <section className="relative pt-36 pb-12 md:pt-48 md:pb-20 px-6">
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -208,14 +208,14 @@ const Index = () => {
       </section>
 
       {/* Features */}
-      <section className="px-6 py-28 md:py-40 relative">
+      <section className="px-6 py-16 md:py-24 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/30 to-transparent" />
         <div className="max-w-6xl mx-auto relative z-10">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
-            className="text-center mb-20"
+            className="text-center mb-12"
           >
             <motion.p variants={fadeUp} custom={0} className="text-[11px] font-semibold text-accent tracking-[0.2em] uppercase mb-4">
               Features
@@ -258,13 +258,13 @@ const Index = () => {
       </div>
 
       {/* Testimonials */}
-      <section className="px-6 py-28 md:py-40">
+      <section className="px-6 py-16 md:py-24">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
-            className="text-center mb-16"
+            className="text-center mb-10"
           >
             <motion.p variants={fadeUp} custom={0} className="text-[11px] font-semibold text-accent tracking-[0.2em] uppercase mb-4">
               Testimonials
@@ -307,7 +307,7 @@ const Index = () => {
       </section>
 
       {/* Free & Open Source */}
-      <section className="px-6 py-28 md:py-40 relative">
+      <section className="px-6 py-16 md:py-24 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/30 to-transparent" />
         <div className="max-w-4xl mx-auto relative z-10">
           <motion.div
@@ -339,7 +339,7 @@ const Index = () => {
       </section>
 
       {/* CTA */}
-      <section className="px-6 py-28 md:py-40 relative">
+      <section className="px-6 py-16 md:py-24 relative">
         <motion.div
           initial="hidden"
           whileInView="visible"
