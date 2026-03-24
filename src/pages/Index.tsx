@@ -60,7 +60,7 @@ const allFeatures = [
   { icon: FileText, title: "Templates", desc: "Meeting notes, journal, project plans." },
   { icon: Download, title: "Export anywhere", desc: "Download as .md, .html, or print to PDF." },
   { icon: Zap, title: "Zen mode", desc: "Distraction-free fullscreen writing." },
-  { icon: Pen, title: "Rich formatting", desc: "Tables, code blocks, task lists — full GFM." },
+  { icon: Pen, title: "Rich formatting", desc: "Tables, code blocks, task lists, and full GFM support." },
 ];
 
 const Index = () => {
