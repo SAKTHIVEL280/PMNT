@@ -236,6 +236,7 @@ const toolbarActions = [
 // ─── Component ────────────────────────────────────────────────────
 
 const Editor = () => {
+  usePageSEO({ title: "Editor", description: "Write and preview markdown in real-time with PMNT's split-pane editor.", path: "/editor" });
   const [folders, setFolders] = useState<NoteFolder[]>(() => load("pmnt-folders", []));
   const [notes, setNotes] = useState<Note[]>(() => load("pmnt-notes-v2", []));
   const [tags, setTags] = useState<NoteTag[]>(() => load("pmnt-tags", []));
