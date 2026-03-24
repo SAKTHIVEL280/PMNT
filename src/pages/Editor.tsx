@@ -126,7 +126,7 @@ const TEMPLATES: { name: string; icon: typeof FileText; content: string }[] = [
   {
     name: "Meeting Notes",
     icon: Briefcase,
-    content: `# Meeting Notes — {{date}}
+    content: `# Meeting Notes - {{date}}
 
 ## Attendees
 - 
