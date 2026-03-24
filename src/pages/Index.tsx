@@ -103,7 +103,7 @@ const Index = () => {
           transition={{ duration: 1.2, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="max-w-[1400px] mx-auto"
         >
-          <div className="relative rounded-[2rem] overflow-hidden pb-32 md:pb-48">
+          <div className="relative rounded-[2rem] overflow-hidden">
             {/* Full background image */}
             <img
               src={heroImg}
@@ -116,7 +116,7 @@ const Index = () => {
             {/* Centered content */}
             <motion.div
               style={{ y: heroY, opacity: heroOpacity }}
-              className="relative z-10 flex flex-col items-center justify-center text-center px-8 pt-20 md:pt-32 pb-8"
+              className="relative z-10 flex flex-col items-center justify-center text-center px-8 py-24 md:py-36"
             >
               <motion.h1
                 initial={{ opacity: 0, y: 30 }}
@@ -157,48 +157,6 @@ const Index = () => {
                   </Button>
                 </Link>
               </motion.div>
-            </motion.div>
-
-            {/* Preview card overlapping bottom of hero */}
-            <motion.div
-              initial={{ opacity: 0, y: 60 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="relative z-20 mx-6 md:mx-16 -mb-32 md:-mb-48"
-            >
-              <div className="bg-background rounded-2xl shadow-2xl border border-border/50 overflow-hidden">
-                {/* Window chrome */}
-                <div className="flex items-center gap-2 px-5 py-3 border-b border-border/50 bg-muted/50">
-                  <div className="w-3 h-3 rounded-full bg-red-400/80" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
-                  <div className="w-3 h-3 rounded-full bg-green-400/80" />
-                  <span className="ml-3 text-xs text-muted-foreground font-mono">editor.md</span>
-                </div>
-                {/* Editor preview content */}
-                <div className="grid grid-cols-1 md:grid-cols-2 divide-x divide-border/50">
-                  <div className="p-6 md:p-8 font-mono text-xs md:text-sm text-muted-foreground leading-relaxed space-y-2">
-                    <p className="text-foreground font-semibold"># Meeting Notes</p>
-                    <p>## Action Items</p>
-                    <p>- [x] Review design mockups</p>
-                    <p>- [x] Update documentation</p>
-                    <p>- [ ] Ship v2.0 release</p>
-                    <p className="mt-4">## Summary</p>
-                    <p>The team agreed on the **new direction**</p>
-                    <p>for the product roadmap...</p>
-                  </div>
-                  <div className="p-6 md:p-8 text-sm text-foreground leading-relaxed space-y-3 hidden md:block">
-                    <h3 className="text-lg font-bold">Meeting Notes</h3>
-                    <h4 className="font-semibold text-base">Action Items</h4>
-                    <div className="space-y-1">
-                      <p>✅ Review design mockups</p>
-                      <p>✅ Update documentation</p>
-                      <p>☐ Ship v2.0 release</p>
-                    </div>
-                    <h4 className="font-semibold text-base mt-3">Summary</h4>
-                    <p className="text-muted-foreground">The team agreed on the <strong className="text-foreground">new direction</strong> for the product roadmap...</p>
-                  </div>
-                </div>
-              </div>
             </motion.div>
           </div>
         </motion.div>
