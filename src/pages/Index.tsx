@@ -142,7 +142,7 @@ const Index = () => {
       </section>
 
       {/* ═══ WHAT IS PMNT — Asymmetric intro ═══ */}
-      <section className="px-6 py-20 md:py-28">
+      <section className="px-6 py-10 md:py-14">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden"
