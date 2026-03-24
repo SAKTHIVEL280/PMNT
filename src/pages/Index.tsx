@@ -309,7 +309,7 @@ const Index = () => {
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
-                className="relative p-7 rounded-2xl border border-border/40 bg-card/40 group hover:border-accent/20 transition-all duration-500"
+                className="relative p-7 rounded-2xl border border-border/40 bg-card/40 group hover:border-accent/20 hover:scale-[1.02] hover:-translate-y-1 transition-all duration-500"
               >
                 <span className="font-serif text-6xl font-bold text-foreground/[0.04] absolute top-4 right-6 group-hover:text-accent/10 transition-colors duration-500">
                   {item.step}
