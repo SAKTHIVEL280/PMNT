@@ -34,7 +34,7 @@ const syntaxExamples = [
   },
   {
     title: "Blockquotes",
-    markdown: `> "The only way to do great work is to love what you do."\n>\n> — Steve Jobs`,
+    markdown: `> "The only way to do great work is to love what you do."\n>\n> - Steve Jobs`,
   },
   {
     title: "Code Blocks",

@@ -1202,7 +1202,7 @@ const Editor = () => {
                 <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setMobileView("editor")}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-medium">{activeNote.title} — Preview</span>
+                <span className="text-sm font-medium">{activeNote.title} - Preview</span>
               </div>
               <div className="flex-1 overflow-y-auto p-5 markdown-preview">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{activeNote.content}</ReactMarkdown>

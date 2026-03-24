@@ -346,7 +346,7 @@ const Index = () => {
                 100% free. Forever.
               </motion.h2>
               <motion.p variants={fadeUp} custom={2} className="text-muted-foreground text-sm md:text-base max-w-lg mx-auto mb-8 leading-relaxed">
-                No accounts, no subscriptions, no tracking. Your notes stay on your device — private by default.
+                No accounts, no subscriptions, no tracking. Your notes stay on your device, private by default.
               </motion.p>
               <motion.div variants={fadeUp} custom={3} className="flex flex-wrap justify-center gap-x-6 gap-y-3 text-[13px] text-foreground/70">
                 {["Unlimited notes", "All features included", "No account required", "Privacy-first", "Works offline"].map((item) => (
