@@ -166,7 +166,7 @@ const Index = () => {
             </div>
             <motion.p variants={fadeUp} custom={1} className="text-muted-foreground text-base md:text-lg leading-relaxed md:pt-2">
               PMNT is a privacy-first markdown editor that helps you write, organize, and export
-              your notes — all from your browser with zero setup, no accounts, and no tracking.
+              your notes, all from your browser with zero setup, no accounts, and no tracking.
             </motion.p>
           </motion.div>
         </div>
