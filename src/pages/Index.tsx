@@ -81,7 +81,7 @@ const Index = () => {
           initial={{ opacity: 0, y: 40, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 1.2, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto h-full"
+          className="mx-auto flex-1 w-full"
         >
           <div className="relative rounded-[2rem] overflow-hidden h-full">
             {/* Full background image */}
