@@ -148,7 +148,7 @@ const TEMPLATES: { name: string; icon: typeof FileText; content: string }[] = [
   {
     name: "Journal Entry",
     icon: BookOpen,
-    content: `# Journal — {{date}}
+    content: `# Journal - {{date}}
 
 ## How I'm feeling
 
