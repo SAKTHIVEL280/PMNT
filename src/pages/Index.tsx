@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useRef } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { AnimatedEditorPreview } from "@/components/AnimatedEditorPreview";
 import { Button } from "@/components/ui/button";
 import {
   Split, Keyboard, Download, FolderOpen, Zap, Check,
