@@ -157,7 +157,7 @@ const Index = () => {
               </motion.h2>
               <motion.div variants={fadeUp} custom={1}>
                 <Link to="/editor">
-                  <Button variant="outline" className="rounded-full px-6 h-10 text-sm font-medium border-foreground/20 hover:bg-foreground hover:text-background transition-all">
+                  <Button variant="outline" className="rounded-full px-6 h-10 text-sm font-medium border-foreground/20 hover:bg-foreground hover:text-background hover:scale-[1.03] active:scale-[0.98] transition-all duration-200">
                     Explore now
                   </Button>
                 </Link>
