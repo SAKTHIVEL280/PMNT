@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import {
   Split, Keyboard, Download, FolderOpen, Zap, Check,
-  ArrowRight, Star, Pen, Shield, Tag, Pin, Archive,
+  ArrowRight, Pen, Shield, Tag, Pin, Archive,
   Command, FileText, Sparkles,
 } from "lucide-react";
 import heroImg from "@/assets/hero-workspace.jpg";
@@ -59,27 +59,6 @@ const allFeatures = [
   { icon: Download, title: "Export anywhere", desc: "Download as .md, .html, or print to PDF." },
   { icon: Zap, title: "Zen mode", desc: "Distraction-free fullscreen writing." },
   { icon: Pen, title: "Rich formatting", desc: "Tables, code blocks, task lists — full GFM." },
-];
-
-const testimonials = [
-  {
-    name: "Sarah Chen",
-    role: "Technical Writer",
-    quote: "PMNT replaced three different apps for me. The split preview alone is worth it.",
-    rating: 5,
-  },
-  {
-    name: "Marcus Rivera",
-    role: "Software Engineer",
-    quote: "Finally, a markdown editor that feels premium without the bloat.",
-    rating: 5,
-  },
-  {
-    name: "Aisha Patel",
-    role: "Content Strategist",
-    quote: "I use PMNT daily for all my content drafts. The zen mode is incredibly productive.",
-    rating: 5,
-  },
 ];
 
 const Index = () => {
@@ -163,7 +142,7 @@ const Index = () => {
       </section>
 
       {/* ═══ WHAT IS PMNT — Asymmetric intro ═══ */}
-      <section className="px-6 py-20 md:py-28">
+      <section className="px-6 py-10 md:py-14">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden"
@@ -192,7 +171,7 @@ const Index = () => {
       </section>
 
       {/* ═══ FEATURE CARDS — 3 columns with subtle colored backgrounds ═══ */}
-      <section className="px-6 pb-20 md:pb-28">
+      <section className="px-6 pb-10 md:pb-14">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden"
@@ -222,7 +201,7 @@ const Index = () => {
       </section>
 
       {/* ═══ ALL FEATURES — Clean grid ═══ */}
-      <section className="px-6 py-16 md:py-24 border-t border-border/40">
+      <section className="px-6 py-10 md:py-14 border-t border-border/40">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden"
@@ -267,7 +246,7 @@ const Index = () => {
       </section>
 
       {/* ═══ EDITOR PREVIEW ═══ */}
-      <section className="px-6 py-16 md:py-24">
+      <section className="px-6 py-10 md:py-14">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden"
@@ -341,7 +320,7 @@ const Index = () => {
       </section>
 
       {/* ═══ WORKFLOW — Three steps ═══ */}
-      <section className="px-6 py-16 md:py-24 border-t border-border/40">
+      <section className="px-6 py-10 md:py-14 border-t border-border/40">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden"
@@ -391,57 +370,8 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ═══ TESTIMONIALS ═══ */}
-      <section className="px-6 py-16 md:py-24">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            className="mb-12"
-          >
-            <motion.p variants={fadeUp} custom={0} className="text-[11px] font-semibold text-accent tracking-[0.2em] uppercase mb-4">
-              Testimonials
-            </motion.p>
-            <motion.h2 variants={fadeUp} custom={1} className="font-serif text-3xl md:text-4xl font-semibold tracking-[-0.01em]">
-              Loved by writers
-            </motion.h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={t.name}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                custom={i}
-                className="p-7 rounded-2xl border border-border/40 bg-card/60 hover:border-accent/20 hover:shadow-lg hover:shadow-accent/[0.04] transition-all duration-500"
-              >
-                <div className="flex gap-0.5 mb-5">
-                  {Array.from({ length: t.rating }).map((_, j) => (
-                    <Star key={j} className="h-3.5 w-3.5 fill-accent text-accent" />
-                  ))}
-                </div>
-                <p className="text-sm leading-[1.7] mb-6 text-foreground/85 font-light italic">"{t.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
-                    <span className="text-xs font-semibold text-accent">{t.name.split(" ").map(n => n[0]).join("")}</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">{t.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{t.role}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ═══ OPEN SOURCE BANNER ═══ */}
-      <section className="px-6 py-16 md:py-24">
+      <section className="px-6 py-10 md:py-14">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden"
@@ -476,7 +406,7 @@ const Index = () => {
       </section>
 
       {/* ═══ CTA ═══ */}
-      <section className="px-6 py-16 md:py-24 border-t border-border/40">
+      <section className="px-6 py-10 md:py-14 border-t border-border/40">
         <motion.div
           initial="hidden"
           whileInView="visible"
