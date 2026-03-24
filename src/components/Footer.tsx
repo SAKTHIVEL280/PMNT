@@ -29,6 +29,7 @@ export function Footer() {
                 { to: "/dashboard", label: "Dashboard" },
                 { to: "/editor", label: "Editor" },
                 { to: "/tutorial", label: "Tutorial" },
+                { to: "/about", label: "About" },
               ].map((link) => (
                 <Link
                   key={link.to}
