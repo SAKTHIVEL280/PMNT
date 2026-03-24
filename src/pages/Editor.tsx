@@ -195,7 +195,7 @@ const TEMPLATES: { name: string; icon: typeof FileText; content: string }[] = [
   {
     name: "To-Do List",
     icon: ListTodo,
-    content: `# To-Do — {{date}}
+    content: `# To-Do - {{date}}
 
 ## High Priority
 - [ ] 
