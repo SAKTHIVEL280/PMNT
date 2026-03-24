@@ -31,7 +31,7 @@ const featureCards = [
   {
     icon: Split,
     title: "Live split preview",
-    description: "Write markdown on the left, see it rendered beautifully on the right — in real time.",
+    description: "Write markdown on the left, see it rendered beautifully on the right in real time.",
     accent: "from-accent/10 to-accent/5",
     border: "border-accent/20",
   },
