@@ -8,7 +8,7 @@ interface SEOProps {
 
 export function usePageSEO({ title, description, path }: SEOProps) {
   useEffect(() => {
-    document.title = `${title} — PMNT`;
+    document.title = `${title} | PMNT`;
 
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc && description) {
