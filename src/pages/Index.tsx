@@ -96,33 +96,33 @@ const Index = () => {
       <Navbar />
 
       {/* ═══ HERO ═══ */}
-      <section ref={heroRef} className="relative pt-20 px-4 md:px-6 overflow-hidden">
+      <section ref={heroRef} className="relative pt-20 px-4 md:px-6 overflow-visible">
         <motion.div
           initial={{ opacity: 0, y: 40, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 1.2, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="max-w-[1400px] mx-auto"
         >
-          <div className="relative rounded-[2rem] overflow-hidden min-h-[75vh] md:min-h-[82vh]">
+          <div className="relative rounded-[2rem] overflow-hidden pb-32 md:pb-48">
             {/* Full background image */}
             <img
               src={heroImg}
               alt="PMNT workspace"
-              className="absolute inset-0 w-full h-full object-cover scale-105"
+              className="absolute inset-0 w-full h-full object-cover scale-110 blur-sm"
             />
-            {/* Clean gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent" />
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/30" />
 
-            {/* Content overlaid on image */}
+            {/* Centered content */}
             <motion.div
               style={{ y: heroY, opacity: heroOpacity }}
-              className="relative z-10 flex flex-col items-start justify-end px-10 md:px-16 pb-14 md:pb-20 min-h-[75vh] md:min-h-[82vh]"
+              className="relative z-10 flex flex-col items-center justify-center text-center px-8 pt-20 md:pt-32 pb-8"
             >
               <motion.h1
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.9, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                className="font-serif text-5xl md:text-7xl lg:text-8xl font-semibold leading-[1.05] tracking-[-0.03em] mb-4 text-white max-w-4xl"
+                className="font-serif text-5xl md:text-7xl lg:text-8xl font-bold leading-[1.05] tracking-[-0.03em] mb-5 text-white max-w-3xl"
               >
                 Your thoughts,
                 <br />
@@ -133,7 +133,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.45 }}
-                className="text-sm md:text-base text-white/75 max-w-md mb-8 leading-relaxed"
+                className="text-sm md:text-base text-white/75 max-w-md mb-10 leading-relaxed"
               >
                 A premium markdown editor designed for clarity, crafted for writers
                 who value focus and elegance.
@@ -146,17 +146,59 @@ const Index = () => {
                 className="flex gap-3"
               >
                 <Link to="/editor">
-                  <Button size="lg" className="bg-white text-black hover:bg-white/90 px-7 h-11 text-sm font-medium rounded-full group">
+                  <Button size="lg" className="bg-white text-black hover:bg-white/90 px-7 h-12 text-sm font-medium rounded-xl group">
                     Start writing
                     <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                   </Button>
                 </Link>
                 <Link to="/tutorial">
-                  <Button size="lg" variant="outline" className="border-white bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 px-7 h-11 text-sm font-medium rounded-full">
+                  <Button size="lg" variant="outline" className="border-white/50 bg-white/15 backdrop-blur-sm text-white hover:bg-white/25 px-7 h-12 text-sm font-medium rounded-xl">
                     Learn more
                   </Button>
                 </Link>
               </motion.div>
+            </motion.div>
+
+            {/* Preview card overlapping bottom of hero */}
+            <motion.div
+              initial={{ opacity: 0, y: 60 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="relative z-20 mx-6 md:mx-16 -mb-32 md:-mb-48"
+            >
+              <div className="bg-background rounded-2xl shadow-2xl border border-border/50 overflow-hidden">
+                {/* Window chrome */}
+                <div className="flex items-center gap-2 px-5 py-3 border-b border-border/50 bg-muted/50">
+                  <div className="w-3 h-3 rounded-full bg-red-400/80" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
+                  <div className="w-3 h-3 rounded-full bg-green-400/80" />
+                  <span className="ml-3 text-xs text-muted-foreground font-mono">editor.md</span>
+                </div>
+                {/* Editor preview content */}
+                <div className="grid grid-cols-1 md:grid-cols-2 divide-x divide-border/50">
+                  <div className="p-6 md:p-8 font-mono text-xs md:text-sm text-muted-foreground leading-relaxed space-y-2">
+                    <p className="text-foreground font-semibold"># Meeting Notes</p>
+                    <p>## Action Items</p>
+                    <p>- [x] Review design mockups</p>
+                    <p>- [x] Update documentation</p>
+                    <p>- [ ] Ship v2.0 release</p>
+                    <p className="mt-4">## Summary</p>
+                    <p>The team agreed on the **new direction**</p>
+                    <p>for the product roadmap...</p>
+                  </div>
+                  <div className="p-6 md:p-8 text-sm text-foreground leading-relaxed space-y-3 hidden md:block">
+                    <h3 className="text-lg font-bold">Meeting Notes</h3>
+                    <h4 className="font-semibold text-base">Action Items</h4>
+                    <div className="space-y-1">
+                      <p>✅ Review design mockups</p>
+                      <p>✅ Update documentation</p>
+                      <p>☐ Ship v2.0 release</p>
+                    </div>
+                    <h4 className="font-semibold text-base mt-3">Summary</h4>
+                    <p className="text-muted-foreground">The team agreed on the <strong className="text-foreground">new direction</strong> for the product roadmap...</p>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
         </motion.div>
