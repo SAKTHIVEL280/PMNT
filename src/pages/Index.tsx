@@ -120,7 +120,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.45 }}
-                className="text-sm md:text-base text-white/80 max-w-md mb-10 leading-relaxed bg-black/15 backdrop-blur-sm rounded-lg px-4 py-2.5 md:px-6 md:py-3 border border-white/[0.06]"
+                className="text-sm md:text-base text-white/85 max-w-md mb-10 leading-relaxed bg-black/25 backdrop-blur-md rounded-lg px-4 py-2.5 md:px-6 md:py-3 border border-white/10"
               >
                 A premium markdown editor designed for clarity, crafted for writers
                 who value focus and elegance.
