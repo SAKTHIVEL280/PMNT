@@ -87,12 +87,17 @@ const Index = () => {
           className="mx-auto flex-1 w-full"
         >
           <div className="relative rounded-xl overflow-hidden h-full">
-            {/* Full background image */}
-            <img
-              src={heroImg}
-              alt="PMNT workspace"
-              className="absolute inset-0 w-full h-full object-cover scale-110 blur-sm"
-            />
+            {/* Full background video */}
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              poster={heroImg}
+              className="absolute inset-0 w-full h-full object-cover scale-110"
+            >
+              <source src={heroVideo.url} type="video/mp4" />
+            </video>
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/30" />
 
