@@ -1,9 +1,10 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
-import { useRef } from "react";
+import { useRef, useState, useCallback } from "react";
 import { usePageSEO } from "@/hooks/use-page-seo";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import { AnimatedEditorPreview } from "@/components/AnimatedEditorPreview";
 import { Button } from "@/components/ui/button";
 import {
