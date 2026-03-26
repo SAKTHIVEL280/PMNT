@@ -65,8 +65,14 @@ const allFeatures = [
   { icon: Pen, title: "Rich formatting", desc: "Tables, code blocks, task lists, and full GFM support." },
 ];
 
+const SPLASH_KEY = "pmnt-skip-splash";
+
 const Index = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const skipSplash = localStorage.getItem(SPLASH_KEY) === "true";
+  const [isLoading, setIsLoading] = useState(!skipSplash);
+  const videoReady = useRef(false);
+  const timerDone = useRef(false);
+
   usePageSEO({ title: "Free Markdown Note Taker", description: "PMNT is a free, open-source markdown note-taking app. Write, organize, and export notes privately in your browser.", path: "/" });
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -76,9 +82,22 @@ const Index = () => {
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
-  const handleVideoReady = useCallback(() => {
-    setIsLoading(false);
+  const tryFinish = useCallback(() => {
+    if (videoReady.current && timerDone.current) setIsLoading(false);
   }, []);
+
+  const handleVideoReady = useCallback(() => {
+    videoReady.current = true;
+    tryFinish();
+  }, [tryFinish]);
+
+  useEffect(() => {
+    if (skipSplash) return;
+    const t = setTimeout(() => { timerDone.current = true; tryFinish(); }, 2500);
+    // Fallback if video never fires
+    const fallback = setTimeout(() => { videoReady.current = true; timerDone.current = true; tryFinish(); }, 5000);
+    return () => { clearTimeout(t); clearTimeout(fallback); };
+  }, [skipSplash, tryFinish]);
 
   return (
     <div className="min-h-screen bg-background relative">
