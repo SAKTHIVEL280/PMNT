@@ -28,6 +28,21 @@ const timeline = [
   { year: "The Result", event: "A free, privacy-first markdown editor that works entirely in your browser. No accounts, no cloud, no compromises." },
 ];
 
+const SPLASH_KEY = "pmnt-skip-splash";
+
+const SplashToggle = () => {
+  const [enabled, setEnabled] = useState(localStorage.getItem(SPLASH_KEY) !== "true");
+  return (
+    <Switch
+      checked={enabled}
+      onCheckedChange={(val) => {
+        setEnabled(val);
+        localStorage.setItem(SPLASH_KEY, val ? "false" : "true");
+      }}
+    />
+  );
+};
+
 const About = () => {
   usePageSEO({ title: "About", description: "PMNT was built by Sakthivel with Lovable. A solo dev's quest for the perfect markdown note-taking app.", path: "/about" });
   return (
