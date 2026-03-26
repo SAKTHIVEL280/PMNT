@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { usePageSEO } from "@/hooks/use-page-seo";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { Switch } from "@/components/ui/switch";
 import { Heart, Target, Sparkles, Code2, ArrowUpRight } from "lucide-react";
 
 const fadeUp = {
@@ -25,6 +27,21 @@ const timeline = [
   { year: "The Build", event: "Built PMNT from scratch with Lovable, an AI-powered development platform that turned the vision into reality." },
   { year: "The Result", event: "A free, privacy-first markdown editor that works entirely in your browser. No accounts, no cloud, no compromises." },
 ];
+
+const SPLASH_KEY = "pmnt-skip-splash";
+
+const SplashToggle = () => {
+  const [enabled, setEnabled] = useState(localStorage.getItem(SPLASH_KEY) !== "true");
+  return (
+    <Switch
+      checked={enabled}
+      onCheckedChange={(val) => {
+        setEnabled(val);
+        localStorage.setItem(SPLASH_KEY, val ? "false" : "true");
+      }}
+    />
+  );
+};
 
 const About = () => {
   usePageSEO({ title: "About", description: "PMNT was built by Sakthivel with Lovable. A solo dev's quest for the perfect markdown note-taking app.", path: "/about" });
@@ -204,6 +221,20 @@ const About = () => {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Settings */}
+      <section className="px-6 py-10 border-t border-border/40">
+        <div className="max-w-xl mx-auto">
+          <h2 className="font-serif text-2xl font-semibold mb-6">Settings</h2>
+          <div className="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/40">
+            <div>
+              <p className="text-sm font-medium">Show splash screen</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Display the loading animation when opening the app</p>
+            </div>
+            <SplashToggle />
           </div>
         </div>
       </section>
