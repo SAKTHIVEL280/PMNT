@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect, useRef, DragEvent, useMemo } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
+import { deflateRaw, inflateRaw } from "pako";
 import { usePageSEO } from "@/hooks/use-page-seo";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -12,7 +14,7 @@ import {
   ChevronLeft, ChevronRight, AlignLeft, FolderPlus, Folder,
   FolderOpen, GripVertical, MoreHorizontal, Pencil, Eye, EyeOff,
   PanelLeftClose, PanelLeft, Copy, ChevronDown, Pin, PinOff,
-  Archive, ArchiveRestore, Tag, X, Command, FileCode, Printer,
+  Archive, ArchiveRestore, Tag, X, Command, FileCode, Printer, Share2, Undo2,
   LayoutTemplate, BookOpen, CalendarDays, ListTodo, Briefcase,
 } from "lucide-react";
 import {
@@ -42,6 +44,8 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { toast } from "@/components/ui/sonner";
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -71,6 +75,12 @@ interface Note {
   tags?: string[]; // tag ids
 }
 
+interface SharedNotePayload {
+  v: 1;
+  title: string;
+  content: string;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────
 
 function uid() {
@@ -88,6 +98,117 @@ function load<T>(key: string, fallback: T): T {
 
 function persist(key: string, data: unknown) {
   localStorage.setItem(key, JSON.stringify(data));
+}
+
+function deriveSharedTitleFromContent(content: string) {
+  const firstLine = content
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => line.length > 0);
+
+  if (!firstLine) {
+    return "Shared note";
+  }
+
+  const headingTitle = firstLine.replace(/^#{1,6}\s+/, "").trim();
+  const normalized = headingTitle || firstLine;
+  return normalized.slice(0, 80);
+}
+
+function bytesToBase64Url(bytes: Uint8Array) {
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function base64UrlToBytes(encoded: string) {
+  const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  const binary = atob(padded);
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+}
+
+function encodeSharedNote(payload: SharedNotePayload) {
+  const compactPayload: [3, string] = [3, payload.content];
+  const json = JSON.stringify(compactPayload);
+  const compressed = deflateRaw(new TextEncoder().encode(json), { level: 9 });
+  return bytesToBase64Url(compressed);
+}
+
+function decodeLegacySharedNote(encoded: string): SharedNotePayload | null {
+  try {
+    const bytes = base64UrlToBytes(encoded);
+    const parsed: unknown = JSON.parse(new TextDecoder().decode(bytes));
+
+    if (!parsed || typeof parsed !== "object") {
+      return null;
+    }
+
+    const maybePayload = parsed as Partial<SharedNotePayload> & { v?: unknown };
+    if (maybePayload.v !== 1 || typeof maybePayload.title !== "string" || typeof maybePayload.content !== "string") {
+      return null;
+    }
+
+    return {
+      v: 1,
+      title: maybePayload.title,
+      content: maybePayload.content,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function decodeSharedNote(encoded: string): SharedNotePayload | null {
+  try {
+    const compressed = base64UrlToBytes(encoded);
+    const inflated = inflateRaw(compressed);
+    const parsed: unknown = JSON.parse(new TextDecoder().decode(inflated));
+
+    if (Array.isArray(parsed) && parsed.length >= 2 && parsed[0] === 3 && typeof parsed[1] === "string") {
+      return {
+        v: 1,
+        title: deriveSharedTitleFromContent(parsed[1]),
+        content: parsed[1],
+      };
+    }
+
+    if (Array.isArray(parsed) && parsed.length >= 3 && parsed[0] === 2 && typeof parsed[1] === "string" && typeof parsed[2] === "string") {
+      return {
+        v: 1,
+        title: parsed[1],
+        content: parsed[2],
+      };
+    }
+  } catch {
+    return decodeLegacySharedNote(encoded);
+  }
+
+  return decodeLegacySharedNote(encoded);
+}
+
+async function copyTextToClipboard(text: string) {
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return true;
+  }
+
+  if (typeof document === "undefined") {
+    return false;
+  }
+
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.style.position = "fixed";
+  textArea.style.opacity = "0";
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  const copied = document.execCommand("copy");
+  document.body.removeChild(textArea);
+  return copied;
 }
 
 const TAG_COLORS = [
@@ -233,10 +354,14 @@ const toolbarActions = [
   { icon: Minus, label: "Divider", prefix: "\n---\n", suffix: "", shortcut: "" },
 ];
 
+const MAX_UNDO_STEPS = 100;
+
 // ─── Component ────────────────────────────────────────────────────
 
 const Editor = () => {
   usePageSEO({ title: "Editor", description: "Write and preview markdown in real-time with PMNT's split-pane editor.", path: "/editor" });
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [folders, setFolders] = useState<NoteFolder[]>(() => load("pmnt-folders", []));
   const [notes, setNotes] = useState<Note[]>(() => load("pmnt-notes-v2", []));
   const [tags, setTags] = useState<NoteTag[]>(() => load("pmnt-tags", []));
@@ -244,7 +369,7 @@ const Editor = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [zenMode, setZenMode] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
+  const [viewMode, setViewMode] = useState<"split" | "editor" | "preview">("split");
   const [mobileView, setMobileView] = useState<"sidebar" | "editor" | "preview">("sidebar");
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
@@ -260,45 +385,134 @@ const Editor = () => {
   const [filterTag, setFilterTag] = useState<string | null>(null);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [templateFolderId, setTemplateFolderId] = useState<string | null>(null);
+  const [horizontalSpace, setHorizontalSpace] = useState(4);
+  const [shareImportOpen, setShareImportOpen] = useState(false);
+  const [sharedIncomingNote, setSharedIncomingNote] = useState<SharedNotePayload | null>(null);
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const [undoStack, setUndoStack] = useState<string[]>([]);
+  const [redoStack, setRedoStack] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const handledRequestedNoteRef = useRef<string | null>(null);
+  const handledSharedLinkRef = useRef<string | null>(null);
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const requestedNoteId = searchParams.get("note");
+  const hashParams = useMemo(() => {
+    const rawHash = location.hash.startsWith("#") ? location.hash.slice(1) : location.hash;
+    return new URLSearchParams(rawHash);
+  }, [location.hash]);
+  const sharedNoteParam = searchParams.get("s") || searchParams.get("share") || hashParams.get("s") || hashParams.get("share");
 
   // Migrate old notes
   useEffect(() => {
-    if (notes.length === 0) {
-      const oldNotes = load<any[]>("pmnt-notes", []);
-      if (oldNotes.length > 0) {
-        const migrated = oldNotes.map((n, i) => ({
-          ...n,
-          folderId: n.folderId ?? null,
-          order: n.order ?? i,
-          pinned: false,
-          trashed: false,
-          tags: [],
-        }));
-        setNotes(migrated);
-        persist("pmnt-notes-v2", migrated);
-      } else {
-        const first: Note = {
-          id: uid(),
-          title: "Welcome",
-          content: DEFAULT_CONTENT,
-          folderId: null,
-          updatedAt: Date.now(),
-          createdAt: Date.now(),
-          order: 0,
-          pinned: false,
-          trashed: false,
-          tags: [],
-        };
-        setNotes([first]);
-        setActiveId(first.id);
-        persist("pmnt-notes-v2", [first]);
-      }
-    } else if (!activeId) {
-      setActiveId(notes.filter(n => !n.trashed)[0]?.id || null);
+    if (notes.length > 0) {
+      return;
     }
-  }, []);
+
+    type LegacyNote = {
+      id: string;
+      title: string;
+      content: string;
+      folderId?: string | null;
+      updatedAt: number;
+      createdAt: number;
+      order?: number;
+    };
+
+    const oldNotes = load<LegacyNote[]>("pmnt-notes", []);
+    if (oldNotes.length > 0) {
+      const migrated: Note[] = oldNotes.map((n, i) => ({
+        id: n.id,
+        title: n.title,
+        content: n.content,
+        folderId: n.folderId ?? null,
+        updatedAt: n.updatedAt,
+        createdAt: n.createdAt,
+        order: n.order ?? i,
+        pinned: false,
+        trashed: false,
+        tags: [],
+      }));
+      setNotes(migrated);
+      persist("pmnt-notes-v2", migrated);
+      return;
+    }
+
+    const first: Note = {
+      id: uid(),
+      title: "Welcome",
+      content: DEFAULT_CONTENT,
+      folderId: null,
+      updatedAt: Date.now(),
+      createdAt: Date.now(),
+      order: 0,
+      pinned: false,
+      trashed: false,
+      tags: [],
+    };
+    setNotes([first]);
+    persist("pmnt-notes-v2", [first]);
+  }, [notes.length]);
+
+  // Keep active note in sync with route query (?note=...) and available notes
+  useEffect(() => {
+    if (notes.length === 0) return;
+
+    const live = notes.filter((n) => !n.trashed);
+
+    if (requestedNoteId && handledRequestedNoteRef.current !== requestedNoteId) {
+      const requested = live.find((n) => n.id === requestedNoteId);
+      handledRequestedNoteRef.current = requestedNoteId;
+
+      if (requested) {
+        if (activeId !== requested.id) {
+          setActiveId(requested.id);
+        }
+        if (showTrash) {
+          setShowTrash(false);
+        }
+        if (isMobile) {
+          setMobileView("editor");
+        }
+        return;
+      }
+    }
+
+    const activeExists = !!activeId && live.some((n) => n.id === activeId);
+    if (!activeExists) {
+      setActiveId(live[0]?.id || null);
+    }
+  }, [notes, requestedNoteId, activeId, isMobile, showTrash]);
+
+  useEffect(() => {
+    if (!sharedNoteParam || handledSharedLinkRef.current === sharedNoteParam) {
+      return;
+    }
+
+    handledSharedLinkRef.current = sharedNoteParam;
+    const decoded = decodeSharedNote(sharedNoteParam);
+    if (!decoded) {
+      setShareFeedback("This share link is invalid or corrupted.");
+      return;
+    }
+
+    setSharedIncomingNote(decoded);
+    setShareImportOpen(true);
+    if (isMobile) {
+      setMobileView("editor");
+    }
+  }, [sharedNoteParam, isMobile]);
+
+  useEffect(() => {
+    if (!shareFeedback) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setShareFeedback(null);
+    }, 3500);
+
+    return () => window.clearTimeout(timer);
+  }, [shareFeedback]);
 
   // Record writing streak
   useEffect(() => {
@@ -329,6 +543,11 @@ const Editor = () => {
 
   const activeNote = notes.find((n) => n.id === activeId);
 
+  useEffect(() => {
+    setUndoStack([]);
+    setRedoStack([]);
+  }, [activeId]);
+
   // ─── Notes CRUD ─────────────────────────────────────────────────
 
   const updateNote = useCallback(
@@ -339,6 +558,47 @@ const Editor = () => {
     },
     [activeId]
   );
+
+  const updateNoteContent = useCallback(
+    (nextContent: string, options?: { trackHistory?: boolean }) => {
+      if (!activeNote || nextContent === activeNote.content) {
+        return;
+      }
+
+      const trackHistory = options?.trackHistory ?? true;
+      if (trackHistory) {
+        setUndoStack((prev) => [...prev, activeNote.content].slice(-MAX_UNDO_STEPS));
+        setRedoStack([]);
+      }
+
+      updateNote({ content: nextContent });
+    },
+    [activeNote, updateNote]
+  );
+
+  const undoContent = useCallback(() => {
+    if (!activeNote || undoStack.length === 0) {
+      return;
+    }
+
+    const previousContent = undoStack[undoStack.length - 1];
+    setUndoStack((prev) => prev.slice(0, -1));
+    setRedoStack((prev) => [activeNote.content, ...prev].slice(0, MAX_UNDO_STEPS));
+    updateNote({ content: previousContent });
+  }, [activeNote, undoStack, updateNote]);
+
+  const redoContent = useCallback(() => {
+    if (!activeNote || redoStack.length === 0) {
+      return;
+    }
+
+    const [nextContent, ...remainingFuture] = redoStack;
+    setRedoStack(remainingFuture);
+    setUndoStack((prev) => [...prev, activeNote.content].slice(-MAX_UNDO_STEPS));
+    updateNote({ content: nextContent });
+  }, [activeNote, redoStack, updateNote]);
+
+  const canUndo = undoStack.length > 0;
 
   const createNote = useCallback(
     (folderId: string | null = null, content: string = "", title: string = "Untitled") => {
@@ -517,7 +777,11 @@ const Editor = () => {
   const toggleFolder = useCallback((id: string) => {
     setExpandedFolders((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   }, []);
@@ -577,8 +841,8 @@ const Editor = () => {
 </head>
 <body>
   <div id="content">${activeNote.content}</div>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>
-  <script>document.getElementById('content').innerHTML = marked.parse(document.getElementById('content').textContent);<\/script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>document.getElementById('content').innerHTML = marked.parse(document.getElementById('content').textContent);</script>
 </body>
 </html>`;
         const blob = new Blob([htmlContent], { type: "text/html" });
@@ -609,17 +873,98 @@ const Editor = () => {
     blockquote { border-left: 4px solid #c4a35a; padding-left: 16px; font-style: italic; }
     @media print { body { margin: 0; } }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
   <div id="c">${activeNote.content}</div>
   <script>
     document.getElementById('c').innerHTML = marked.parse(document.getElementById('c').textContent);
     setTimeout(() => { window.print(); window.close(); }, 500);
-  <\/script>
+  </script>
 </body>
 </html>`);
     printWindow.document.close();
+  }, [activeNote]);
+
+  const clearShareParamFromUrl = useCallback(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    const hasSearchShare = url.searchParams.has("s") || url.searchParams.has("share");
+    const existingHashParams = new URLSearchParams(url.hash.startsWith("#") ? url.hash.slice(1) : url.hash);
+    const hasHashShare = existingHashParams.has("s") || existingHashParams.has("share");
+
+    if (!hasSearchShare && !hasHashShare) {
+      return;
+    }
+
+    url.searchParams.delete("s");
+    url.searchParams.delete("share");
+
+    const nextHashParams = new URLSearchParams(url.hash.startsWith("#") ? url.hash.slice(1) : url.hash);
+    nextHashParams.delete("s");
+    nextHashParams.delete("share");
+    const nextHash = nextHashParams.toString();
+    url.hash = nextHash ? `#${nextHash}` : "";
+
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  }, []);
+
+  const dismissSharedImport = useCallback(() => {
+    setShareImportOpen(false);
+    setSharedIncomingNote(null);
+    clearShareParamFromUrl();
+  }, [clearShareParamFromUrl]);
+
+  const importSharedNote = useCallback(() => {
+    if (!sharedIncomingNote) {
+      return;
+    }
+
+    createNote(null, sharedIncomingNote.content, sharedIncomingNote.title.trim() || "Shared note");
+    setShowTrash(false);
+    setShareFeedback("Shared note imported.");
+    dismissSharedImport();
+  }, [createNote, dismissSharedImport, sharedIncomingNote]);
+
+  const copyShareLink = useCallback(async () => {
+    if (!activeNote || typeof window === "undefined") {
+      return;
+    }
+
+    const payload: SharedNotePayload = {
+      v: 1,
+      title: activeNote.title || "Shared note",
+      content: activeNote.content,
+    };
+
+    const encoded = encodeSharedNote(payload);
+    const shareUrl = new URL(window.location.origin);
+    shareUrl.pathname = "/";
+    shareUrl.hash = `s=${encoded}`;
+
+    const shareLink = shareUrl.toString();
+    if (shareLink.length > 7600) {
+      setShareFeedback("Note is too large for URL sharing. Use Export .md instead.");
+      toast.error("Share link is too long");
+      return;
+    }
+
+    try {
+      const copied = await copyTextToClipboard(shareLink);
+      if (copied) {
+        setShareFeedback("URL copied to clipboard.");
+        toast.success("URL copied to clipboard");
+      } else {
+        setShareFeedback("Could not copy automatically.");
+        toast.error("Could not copy URL");
+      }
+    } catch {
+      setShareFeedback("Could not create share link.");
+      toast.error("Could not create share link");
+    }
   }, [activeNote]);
 
   // ─── Markdown Insert ───────────────────────────────────────────
@@ -633,26 +978,85 @@ const Editor = () => {
       const selected = activeNote.content.slice(start, end);
       const replacement = prefix + (selected || "text") + suffix;
       const newContent = activeNote.content.slice(0, start) + replacement + activeNote.content.slice(end);
-      updateNote({ content: newContent });
+      updateNoteContent(newContent);
       setTimeout(() => {
         ta.focus();
         ta.setSelectionRange(start + prefix.length, start + prefix.length + (selected || "text").length);
       }, 0);
     },
-    [activeNote, updateNote]
+    [activeNote, updateNoteContent]
   );
+
+  const insertHorizontalSpace = useCallback(
+    (count: number = horizontalSpace) => {
+      const ta = textareaRef.current;
+      if (!ta || !activeNote) return;
+
+      const safeCount = Math.min(32, Math.max(1, Math.floor(count)));
+      const spacer = "&nbsp;".repeat(safeCount);
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      const newContent = activeNote.content.slice(0, start) + spacer + activeNote.content.slice(end);
+
+      updateNoteContent(newContent);
+      setTimeout(() => {
+        ta.focus();
+        const nextCursor = start + spacer.length;
+        ta.setSelectionRange(nextCursor, nextCursor);
+      }, 0);
+    },
+    [activeNote, horizontalSpace, updateNoteContent]
+  );
+
+  const showEditorPane = viewMode !== "preview";
+  const showPreviewPane = viewMode !== "editor";
+
+  const toggleEditorPane = useCallback(() => {
+    setViewMode((prev) => {
+      if (prev === "split") return "preview";
+      if (prev === "preview") return "split";
+      return "preview";
+    });
+  }, []);
+
+  const togglePreviewPane = useCallback(() => {
+    setViewMode((prev) => {
+      if (prev === "split") return "editor";
+      if (prev === "editor") return "split";
+      return "editor";
+    });
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey)) return;
-      if (e.key === "Escape" && zenMode) { setZenMode(false); return; }
-      if (e.key === "k") return; // handled by command palette
-      const action = toolbarActions.find((a) => a.shortcut === e.key);
+      const key = e.key.toLowerCase();
+      if (key === "escape" && zenMode) { setZenMode(false); return; }
+      if (key === "k") return; // handled by command palette
+
+      const isEditorFocused = document.activeElement === textareaRef.current;
+      if (isEditorFocused && key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redoContent();
+        } else {
+          undoContent();
+        }
+        return;
+      }
+
+      if (isEditorFocused && key === "y") {
+        e.preventDefault();
+        redoContent();
+        return;
+      }
+
+      const action = toolbarActions.find((a) => a.shortcut === key);
       if (action) { e.preventDefault(); insertMarkdown(action.prefix, action.suffix); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [insertMarkdown, zenMode]);
+  }, [insertMarkdown, redoContent, undoContent, zenMode]);
 
   // ─── Filter ─────────────────────────────────────────────────────
 
@@ -729,7 +1133,7 @@ const Editor = () => {
             </div>
           )}
           <p className="text-[11px] text-muted-foreground truncate">
-            {note.content.slice(0, 50).replace(/[#*_`\[\]]/g, "").trim() || "Empty note"}
+            {note.content.slice(0, 50).replace(/[#*_`[\]]/g, "").trim() || "Empty note"}
           </p>
         </div>
       </div>
@@ -1101,6 +1505,9 @@ const Editor = () => {
               <CommandItem onSelect={() => { exportNote("html"); setCommandOpen(false); }}>
                 <FileCode className="h-4 w-4 mr-2" /> Export as HTML
               </CommandItem>
+              <CommandItem onSelect={() => { void copyShareLink(); setCommandOpen(false); }}>
+                <Share2 className="h-4 w-4 mr-2" /> Copy Share Link
+              </CommandItem>
               <CommandItem onSelect={() => { printNote(); setCommandOpen(false); }}>
                 <Printer className="h-4 w-4 mr-2" /> Print / Save as PDF
               </CommandItem>
@@ -1150,6 +1557,9 @@ const Editor = () => {
                 <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setMobileView("preview")}>
                   <Eye className="h-4 w-4" />
                 </Button>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => void copyShareLink()} title="Copy share link">
+                  <Share2 className="h-4 w-4" />
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
@@ -1163,6 +1573,10 @@ const Editor = () => {
                     <DropdownMenuItem onClick={() => exportNote("html")}>
                       <FileCode className="h-3.5 w-3.5 mr-2" /> Export .html
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => void copyShareLink()}>
+                      <Share2 className="h-3.5 w-3.5 mr-2" /> Copy share link
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={printNote}>
                       <Printer className="h-3.5 w-3.5 mr-2" /> Print / PDF
                     </DropdownMenuItem>
@@ -1180,11 +1594,26 @@ const Editor = () => {
                     <action.icon className="h-4 w-4 text-muted-foreground" />
                   </button>
                 ))}
+                <button
+                  onClick={() => insertHorizontalSpace(horizontalSpace)}
+                  className="px-2 rounded-lg hover:bg-muted transition-colors shrink-0 text-[11px] font-semibold text-muted-foreground"
+                  title={`Insert ${horizontalSpace} horizontal spaces`}
+                >
+                  SP
+                </button>
+                <button
+                  onClick={undoContent}
+                  disabled={!canUndo}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Undo (Ctrl+Z)"
+                >
+                  <Undo2 className="h-4 w-4 text-muted-foreground" />
+                </button>
               </div>
               <textarea
                 ref={textareaRef}
                 value={activeNote.content}
-                onChange={(e) => updateNote({ content: e.target.value })}
+                onChange={(e) => updateNoteContent(e.target.value)}
                 className="flex-1 resize-none bg-background p-4 font-mono text-sm leading-relaxed outline-none"
                 placeholder="Start writing..."
                 spellCheck={false}
@@ -1217,6 +1646,17 @@ const Editor = () => {
         <RenameDialog data={renameNoteDialog} onClose={() => setRenameNoteDialog(null)} onRename={(id, title) => { setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, title, updatedAt: Date.now() } : n))); setRenameNoteDialog(null); }} />
         <TagDialog open={tagDialogOpen} onOpenChange={setTagDialogOpen} tags={tags} newName={newTagName} newColor={newTagColor} onNameChange={setNewTagName} onColorChange={setNewTagColor} onCreate={createTag} onDelete={deleteTag} />
         <TemplateDialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen} onSelect={(t) => createFromTemplate(t, templateFolderId)} />
+        <ShareImportDialog
+          open={shareImportOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              dismissSharedImport();
+            }
+          }}
+          note={sharedIncomingNote}
+          onImport={importSharedNote}
+          onDismiss={dismissSharedImport}
+        />
       </div>
     );
   }
@@ -1267,6 +1707,71 @@ const Editor = () => {
                       <action.icon className="h-4 w-4 text-muted-foreground" />
                     </button>
                   ))}
+
+                  <button
+                    onClick={() => insertHorizontalSpace(horizontalSpace)}
+                    className="px-2 py-1.5 rounded-lg hover:bg-muted transition-colors text-[11px] font-semibold text-muted-foreground"
+                    title={`Insert ${horizontalSpace} horizontal spaces`}
+                  >
+                    SP
+                  </button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                        title="Adjust horizontal spacing"
+                      >
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-56 p-2">
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium">Horizontal spaces</p>
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2"
+                            onClick={() => setHorizontalSpace((prev) => Math.max(1, prev - 1))}
+                          >
+                            -
+                          </Button>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={32}
+                            value={horizontalSpace}
+                            onChange={(e) => {
+                              const value = Number(e.target.value);
+                              if (!Number.isFinite(value)) return;
+                              setHorizontalSpace(Math.min(32, Math.max(1, Math.floor(value))));
+                            }}
+                            className="h-8 text-xs"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2"
+                            onClick={() => setHorizontalSpace((prev) => Math.min(32, prev + 1))}
+                          >
+                            +
+                          </Button>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="w-full h-8"
+                          onClick={() => insertHorizontalSpace(horizontalSpace)}
+                        >
+                          Insert {horizontalSpace} spaces
+                        </Button>
+                        <p className="text-[10px] text-muted-foreground">Uses &amp;nbsp; for markdown-safe horizontal spacing.</p>
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 <div className="flex-1" />
@@ -1284,10 +1789,41 @@ const Editor = () => {
                   size="sm"
                   variant="ghost"
                   className="h-8 w-8 p-0"
-                  onClick={() => setShowPreview(!showPreview)}
-                  title={showPreview ? "Hide preview" : "Show preview"}
+                  onClick={undoContent}
+                  title="Undo (Ctrl+Z)"
+                  disabled={!canUndo}
                 >
-                  {showPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  <Undo2 className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0"
+                  onClick={toggleEditorPane}
+                  title={showEditorPane ? "Hide editor pane" : "Show editor pane"}
+                >
+                  <FileText className={`h-4 w-4 ${showEditorPane ? "" : "opacity-40"}`} />
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0"
+                  onClick={togglePreviewPane}
+                  title={showPreviewPane ? "Hide preview pane" : "Show preview pane"}
+                >
+                  {showPreviewPane ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0"
+                  onClick={() => void copyShareLink()}
+                  title="Copy share link"
+                >
+                  <Share2 className="h-4 w-4" />
                 </Button>
 
                 {/* Export dropdown */}
@@ -1303,6 +1839,9 @@ const Editor = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => exportNote("html")}>
                       <FileCode className="h-3.5 w-3.5 mr-2" /> Export .html
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => void copyShareLink()}>
+                      <Share2 className="h-3.5 w-3.5 mr-2" /> Copy share link
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={printNote}>
@@ -1320,27 +1859,47 @@ const Editor = () => {
 
           {/* Editor + Preview */}
           {activeNote ? (
-            <div className="flex-1 flex overflow-hidden">
-              <div className={`flex flex-col min-w-0 ${showPreview ? "flex-1" : "w-full"}`}>
-                <textarea
-                  ref={textareaRef}
-                  value={activeNote.content}
-                  onChange={(e) => updateNote({ content: e.target.value })}
-                  className="flex-1 resize-none bg-background p-6 font-mono text-sm leading-relaxed outline-none custom-scrollbar"
-                  placeholder="Start writing markdown..."
-                  spellCheck={false}
-                />
-              </div>
-
-              {showPreview && (
-                <>
-                  <div className="w-px bg-border/50" />
-                  <div className="flex-1 overflow-y-auto p-6 custom-scrollbar markdown-preview">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{activeNote.content}</ReactMarkdown>
+            <>
+              {viewMode === "split" ? (
+                <ResizablePanelGroup direction="horizontal" className="flex-1" autoSaveId="pmnt-editor-split">
+                  <ResizablePanel defaultSize={50} minSize={20}>
+                    <div className="h-full flex flex-col min-w-0">
+                      <textarea
+                        ref={textareaRef}
+                        value={activeNote.content}
+                        onChange={(e) => updateNoteContent(e.target.value)}
+                        className="h-full w-full resize-none bg-background p-6 font-mono text-sm leading-relaxed outline-none custom-scrollbar"
+                        placeholder="Start writing markdown..."
+                        spellCheck={false}
+                      />
+                    </div>
+                  </ResizablePanel>
+                  <ResizableHandle withHandle />
+                  <ResizablePanel defaultSize={50} minSize={20}>
+                    <div className="h-full overflow-y-auto p-6 custom-scrollbar markdown-preview">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{activeNote.content}</ReactMarkdown>
+                    </div>
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+              ) : showEditorPane ? (
+                <div className="flex-1 flex overflow-hidden">
+                  <div className="w-full flex flex-col min-w-0">
+                    <textarea
+                      ref={textareaRef}
+                      value={activeNote.content}
+                      onChange={(e) => updateNoteContent(e.target.value)}
+                      className="h-full w-full resize-none bg-background p-6 font-mono text-sm leading-relaxed outline-none custom-scrollbar"
+                      placeholder="Start writing markdown..."
+                      spellCheck={false}
+                    />
                   </div>
-                </>
+                </div>
+              ) : (
+                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar markdown-preview">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{activeNote.content}</ReactMarkdown>
+                </div>
               )}
-            </div>
+            </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
               <div className="text-center">
@@ -1384,6 +1943,7 @@ const Editor = () => {
               )}
             </div>
             <div className="flex items-center gap-4">
+              {shareFeedback && <span className="text-accent">{shareFeedback}</span>}
               <span>Markdown</span>
               {zenMode && (
                 <button onClick={() => setZenMode(false)} className="hover:text-foreground transition-colors">
@@ -1401,6 +1961,17 @@ const Editor = () => {
       <RenameDialog data={renameNoteDialog} onClose={() => setRenameNoteDialog(null)} onRename={(id, title) => { setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, title, updatedAt: Date.now() } : n))); setRenameNoteDialog(null); }} />
       <TagDialog open={tagDialogOpen} onOpenChange={setTagDialogOpen} tags={tags} newName={newTagName} newColor={newTagColor} onNameChange={setNewTagName} onColorChange={setNewTagColor} onCreate={createTag} onDelete={deleteTag} />
       <TemplateDialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen} onSelect={(t) => createFromTemplate(t, templateFolderId)} />
+      <ShareImportDialog
+        open={shareImportOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            dismissSharedImport();
+          }
+        }}
+        note={sharedIncomingNote}
+        onImport={importSharedNote}
+        onDismiss={dismissSharedImport}
+      />
     </div>
   );
 };
@@ -1529,6 +2100,53 @@ function TemplateDialog({
             </button>
           ))}
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ShareImportDialog({
+  open,
+  onOpenChange,
+  note,
+  onImport,
+  onDismiss,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  note: SharedNotePayload | null;
+  onImport: () => void;
+  onDismiss: () => void;
+}) {
+  const sharedWordCount = note?.content.trim().split(/\s+/).filter(Boolean).length || 0;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-serif">Import Shared Note</DialogTitle>
+        </DialogHeader>
+        {note ? (
+          <div className="space-y-3 text-sm">
+            <div className="rounded-lg border border-border/60 bg-muted/30 p-3 space-y-1.5">
+              <p className="font-medium">{note.title || "Shared note"}</p>
+              <p className="text-xs text-muted-foreground line-clamp-4">
+                {note.content.slice(0, 240).trim() || "(Empty note content)"}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {sharedWordCount} words will be imported as a new local note.
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">No valid shared note was found in this URL.</p>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={onDismiss} className="rounded-xl">Cancel</Button>
+          <Button onClick={onImport} disabled={!note} className="rounded-xl">
+            Import Note
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
