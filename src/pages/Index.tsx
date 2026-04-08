@@ -72,6 +72,11 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(!skipSplash);
   const videoReady = useRef(false);
   const timerDone = useRef(false);
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator === "undefined" ? true : navigator.onLine));
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [videoVisible, setVideoVisible] = useState(false);
+  const heroVideoUrl = import.meta.env.VITE_HERO_VIDEO_URL?.trim() || heroVideo.url;
+  const shouldAttemptVideo = isOnline && !videoFailed && !!heroVideoUrl;
 
   usePageSEO({ title: "Free Markdown Note Taker", description: "PMNT is a free, open-source markdown note-taking app. Write, organize, and export notes privately in your browser.", path: "/" });
   const heroRef = useRef<HTMLDivElement>(null);
@@ -87,9 +92,50 @@ const Index = () => {
   }, []);
 
   const handleVideoReady = useCallback(() => {
+    setVideoVisible(true);
     videoReady.current = true;
     tryFinish();
   }, [tryFinish]);
+
+  const handleVideoError = useCallback(() => {
+    setVideoVisible(false);
+    setVideoFailed(true);
+    videoReady.current = true;
+    tryFinish();
+  }, [tryFinish]);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setVideoFailed(false);
+      setVideoVisible(false);
+      videoReady.current = false;
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      setVideoVisible(false);
+      videoReady.current = true;
+      tryFinish();
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [tryFinish]);
+
+  useEffect(() => {
+    if (shouldAttemptVideo) {
+      return;
+    }
+
+    setVideoVisible(false);
+    videoReady.current = true;
+    tryFinish();
+  }, [shouldAttemptVideo, tryFinish]);
 
   useEffect(() => {
     if (skipSplash) return;
@@ -113,19 +159,32 @@ const Index = () => {
           className="mx-auto flex-1 w-full"
         >
           <div className="relative rounded-xl overflow-hidden h-full">
-            {/* Full background video */}
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              poster={heroImg}
-              onCanPlayThrough={handleVideoReady}
-              onError={handleVideoReady}
+            {/* Fallback image is always present; video overlays only when available. */}
+            <img
+              src={heroImg}
+              alt=""
+              aria-hidden="true"
               className="absolute inset-0 w-full h-full object-cover scale-110"
-            >
-              <source src={heroVideo.url} type="video/mp4" />
-            </video>
+            />
+            {shouldAttemptVideo && (
+              <video
+                key={heroVideoUrl}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="metadata"
+                poster={heroImg}
+                onLoadedData={handleVideoReady}
+                onCanPlayThrough={handleVideoReady}
+                onError={handleVideoError}
+                className={`absolute inset-0 w-full h-full object-cover scale-110 transition-opacity duration-500 ${
+                  videoVisible ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <source src={heroVideoUrl} type="video/mp4" />
+              </video>
+            )}
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/30" />
 
